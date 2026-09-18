@@ -1,0 +1,6 @@
+{
+  "name": "Sistem Manajemen Pelayaran",
+  "description": "Aplikasi manajemen perusahaan pelayaran untuk mengelola armada kapal, rute pengiriman kargo, dan operasional pelayaran secara real-time.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
