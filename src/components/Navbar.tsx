@@ -11,14 +11,14 @@ import {
   Database,
   Radio
 } from 'lucide-react';
-import { signOut, auth, User } from '../firebase/config';
+import { logoutUser, AppUser } from '../firebase/config';
 
 export type ActiveTab = 'dashboard' | 'vessels' | 'voyages' | 'cargoes' | 'maintenances';
 
 interface NavbarProps {
   activeTab: ActiveTab;
   setActiveTab: (tab: ActiveTab) => void;
-  currentUser: User | null;
+  currentUser: AppUser | null;
   counts: {
     vessels: number;
     voyages: number;
@@ -37,7 +37,7 @@ export const Navbar: React.FC<NavbarProps> = ({
 }) => {
   const handleLogout = async () => {
     try {
-      await signOut(auth);
+      await logoutUser();
       onNotify('info', 'Sesi Berakhir', 'Anda telah berhasil keluar dari sistem operasional.');
     } catch (err: any) {
       onNotify('error', 'Gagal Keluar', err?.message || 'Terjadi kesalahan saat logout.');
@@ -91,28 +91,38 @@ export const Navbar: React.FC<NavbarProps> = ({
 
             {/* Current User profile badge */}
             <div className="flex items-center gap-2.5 pl-2 sm:pl-3 border-l border-slate-200">
-              <div className="w-8 h-8 rounded-full bg-blue-100 text-blue-700 flex items-center justify-center font-bold text-xs">
-                {currentUser?.displayName ? currentUser.displayName.charAt(0).toUpperCase() : <UserIcon className="w-4 h-4" />}
-              </div>
+              {currentUser?.photoURL ? (
+                <img 
+                  src={currentUser.photoURL} 
+                  alt="Avatar" 
+                  referrerPolicy="no-referrer"
+                  className="w-8 h-8 rounded-full border border-slate-200 object-cover shadow-xs" 
+                />
+              ) : (
+                <div className="w-8 h-8 rounded-full bg-blue-100 text-blue-700 flex items-center justify-center font-bold text-xs shadow-xs">
+                  {currentUser?.displayName ? currentUser.displayName.charAt(0).toUpperCase() : <UserIcon className="w-4 h-4" />}
+                </div>
+              )}
               <div className="hidden sm:block text-left">
-                <div className="text-xs font-semibold text-slate-900 truncate max-w-[130px]">
+                <div className="text-xs font-bold text-slate-900 truncate max-w-[140px]">
                   {currentUser?.displayName || currentUser?.email?.split('@')[0] || 'Administrator'}
                 </div>
-                <div className="text-[10px] text-slate-500 font-mono truncate max-w-[130px]">
-                  {currentUser?.email || 'Admin Sesi'}
+                <div className="text-[10px] text-slate-500 font-mono truncate max-w-[140px]">
+                  {currentUser?.email || (currentUser?.isAnonymous ? 'Tamu Maritim' : 'Akun Aktif')}
                 </div>
               </div>
 
-              {/* Logout Button */}
+              {/* Logout / Switch Account Button */}
               <button
                 id="logout-header-btn"
                 type="button"
                 onClick={handleLogout}
-                title="Keluar dari sistem"
-                className="p-2 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-xl transition-colors"
+                title="Keluar / Ganti Akun"
+                className="inline-flex items-center gap-1.5 px-2.5 py-1.5 text-xs font-semibold text-slate-600 hover:text-rose-600 hover:bg-rose-50 rounded-xl transition-colors border border-slate-200 hover:border-rose-200 cursor-pointer"
                 aria-label="Logout"
               >
-                <LogOut className="w-4 h-4" />
+                <LogOut className="w-3.5 h-3.5" />
+                <span className="hidden md:inline">Ganti Akun</span>
               </button>
             </div>
           </div>

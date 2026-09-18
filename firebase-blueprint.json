@@ -1,0 +1,127 @@
+{
+  "entities": {
+    "User": {
+      "title": "User",
+      "description": "User profile and authentication identity record",
+      "type": "object",
+      "properties": {
+        "uid": { "type": "string" },
+        "email": { "type": "string" },
+        "displayName": { "type": "string" },
+        "role": { "type": "string" },
+        "photoURL": { "type": "string" },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "lastLogin": { "type": "string", "format": "date-time" }
+      },
+      "required": ["uid", "email"]
+    },
+    "Vessel": {
+      "title": "Vessel",
+      "description": "Commercial maritime vessel profile and fleet status",
+      "type": "object",
+      "properties": {
+        "name": { "type": "string" },
+        "callSign": { "type": "string" },
+        "imoNumber": { "type": "string" },
+        "type": { "type": "string" },
+        "dwt": { "type": "number" },
+        "teuCapacity": { "type": "number" },
+        "yearBuilt": { "type": "number" },
+        "status": { "type": "string" },
+        "currentLocation": { "type": "string" },
+        "captainName": { "type": "string" },
+        "fuelLevelPercent": { "type": "number" }
+      },
+      "required": ["name", "callSign", "type", "status"]
+    },
+    "Voyage": {
+      "title": "Voyage",
+      "description": "Scheduled shipping voyage route and tracking",
+      "type": "object",
+      "properties": {
+        "voyageNumber": { "type": "string" },
+        "vesselId": { "type": "string" },
+        "vesselName": { "type": "string" },
+        "originPort": { "type": "string" },
+        "destinationPort": { "type": "string" },
+        "departureDate": { "type": "string" },
+        "arrivalDate": { "type": "string" },
+        "status": { "type": "string" },
+        "cargoTotalTons": { "type": "number" }
+      },
+      "required": ["voyageNumber", "vesselId", "originPort", "destinationPort", "status"]
+    },
+    "Cargo": {
+      "title": "Cargo",
+      "description": "Bill of Lading and commercial shipment manifest",
+      "type": "object",
+      "properties": {
+        "blNumber": { "type": "string" },
+        "voyageId": { "type": "string" },
+        "shipper": { "type": "string" },
+        "consignee": { "type": "string" },
+        "cargoType": { "type": "string" },
+        "weightKg": { "type": "number" },
+        "tariffIdr": { "type": "number" },
+        "paymentStatus": { "type": "string" }
+      },
+      "required": ["blNumber", "voyageId", "shipper", "consignee", "tariffIdr"]
+    },
+    "Maintenance": {
+      "title": "Maintenance",
+      "description": "Dry dock maintenance, shipyard repair, and classification survey",
+      "type": "object",
+      "properties": {
+        "vesselId": { "type": "string" },
+        "vesselName": { "type": "string" },
+        "serviceType": { "type": "string" },
+        "dockLocation": { "type": "string" },
+        "startDate": { "type": "string" },
+        "estimatedCompletionDate": { "type": "string" },
+        "estimatedCostIdr": { "type": "number" },
+        "actualCostIdr": { "type": "number" },
+        "status": { "type": "string" },
+        "leadEngineer": { "type": "string" }
+      },
+      "required": ["vesselId", "vesselName", "serviceType", "dockLocation", "status"]
+    },
+    "OperationalLog": {
+      "title": "OperationalLog",
+      "description": "Real-time audit log of system operations and maritime events",
+      "type": "object",
+      "properties": {
+        "title": { "type": "string" },
+        "description": { "type": "string" },
+        "category": { "type": "string" },
+        "performedBy": { "type": "string" }
+      },
+      "required": ["title", "description", "category"]
+    }
+  },
+  "firestore": {
+    "/users/{userId}": {
+      "schema": { "$ref": "#/entities/User" },
+      "description": "User profiles and authentication data"
+    },
+    "/vessels/{vesselId}": {
+      "schema": { "$ref": "#/entities/Vessel" },
+      "description": "Shipping fleet vessels"
+    },
+    "/voyages/{voyageId}": {
+      "schema": { "$ref": "#/entities/Voyage" },
+      "description": "Active and scheduled shipping routes"
+    },
+    "/cargoes/{cargoId}": {
+      "schema": { "$ref": "#/entities/Cargo" },
+      "description": "Cargo manifests and bill of lading documents"
+    },
+    "/maintenances/{maintenanceId}": {
+      "schema": { "$ref": "#/entities/Maintenance" },
+      "description": "Dock maintenance and surveys"
+    },
+    "/operational_logs/{logId}": {
+      "schema": { "$ref": "#/entities/OperationalLog" },
+      "description": "Audit and operational activity logs"
+    }
+  }
+}

@@ -6,13 +6,10 @@
 import React, { useState, useEffect } from 'react';
 import { 
   auth, 
-  onAuthStateChanged, 
-  User, 
+  onUnifiedAuthStateChanged, 
+  AppUser, 
   db, 
   collection, 
-  query, 
-  orderBy, 
-  limit, 
   onSnapshot 
 } from './firebase/config';
 import { Vessel, Voyage, Cargo, Maintenance, OperationalLog, ToastMessage } from './types/shipping';
@@ -26,8 +23,8 @@ import { MaintenanceView } from './components/MaintenanceView';
 import { ToastContainer } from './components/Toast';
 
 export default function App() {
-  // Authentication state - Strictly via Firebase Auth (NO localStorage)
-  const [currentUser, setCurrentUser] = useState<User | null>(null);
+  // Authentication state - Unified Firebase Auth & Firestore Session
+  const [currentUser, setCurrentUser] = useState<AppUser | null>(null);
   const [isAuthChecking, setIsAuthChecking] = useState(true);
 
   // Active navigation tab
@@ -60,9 +57,18 @@ export default function App() {
     setToasts((prev) => prev.filter((t) => t.id !== id));
   };
 
-  // 1. Listen to Firebase Authentication
+  // Helper to extract timestamp millis safely
+  const getMillis = (val: any): number => {
+    if (!val) return 0;
+    if (typeof val.toMillis === 'function') return val.toMillis();
+    if (val.seconds) return val.seconds * 1000;
+    const d = new Date(val).getTime();
+    return isNaN(d) ? 0 : d;
+  };
+
+  // 1. Listen to Unified Firebase Authentication
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, (user) => {
+    const unsubscribe = onUnifiedAuthStateChanged((user) => {
       setCurrentUser(user);
       setIsAuthChecking(false);
     });
@@ -72,15 +78,15 @@ export default function App() {
 
   // 2. Real-time Firebase Firestore synchronization
   useEffect(() => {
-    // Set up real-time listeners for all primary shipping collections
-    const vesselsQuery = query(collection(db, 'vessels'), orderBy('createdAt', 'desc'));
+    // Set up robust real-time listeners for all primary shipping collections
     const unsubsVessels = onSnapshot(
-      vesselsQuery,
+      collection(db, 'vessels'),
       (snapshot) => {
         const data: Vessel[] = snapshot.docs.map((docSnap) => ({
           id: docSnap.id,
           ...docSnap.data()
         })) as Vessel[];
+        data.sort((a, b) => getMillis(b.createdAt) - getMillis(a.createdAt));
         setVessels(data);
         setIsDataLoading(false);
       },
@@ -91,14 +97,14 @@ export default function App() {
       }
     );
 
-    const voyagesQuery = query(collection(db, 'voyages'), orderBy('createdAt', 'desc'));
     const unsubsVoyages = onSnapshot(
-      voyagesQuery,
+      collection(db, 'voyages'),
       (snapshot) => {
         const data: Voyage[] = snapshot.docs.map((docSnap) => ({
           id: docSnap.id,
           ...docSnap.data()
         })) as Voyage[];
+        data.sort((a, b) => getMillis(b.createdAt) - getMillis(a.createdAt));
         setVoyages(data);
       },
       (error) => {
@@ -106,14 +112,14 @@ export default function App() {
       }
     );
 
-    const cargoesQuery = query(collection(db, 'cargoes'), orderBy('createdAt', 'desc'));
     const unsubsCargoes = onSnapshot(
-      cargoesQuery,
+      collection(db, 'cargoes'),
       (snapshot) => {
         const data: Cargo[] = snapshot.docs.map((docSnap) => ({
           id: docSnap.id,
           ...docSnap.data()
         })) as Cargo[];
+        data.sort((a, b) => getMillis(b.createdAt) - getMillis(a.createdAt));
         setCargoes(data);
       },
       (error) => {
@@ -121,14 +127,14 @@ export default function App() {
       }
     );
 
-    const maintQuery = query(collection(db, 'maintenances'), orderBy('createdAt', 'desc'));
     const unsubsMaint = onSnapshot(
-      maintQuery,
+      collection(db, 'maintenances'),
       (snapshot) => {
         const data: Maintenance[] = snapshot.docs.map((docSnap) => ({
           id: docSnap.id,
           ...docSnap.data()
         })) as Maintenance[];
+        data.sort((a, b) => getMillis(b.createdAt) - getMillis(a.createdAt));
         setMaintenances(data);
       },
       (error) => {
@@ -136,15 +142,15 @@ export default function App() {
       }
     );
 
-    const logsQuery = query(collection(db, 'operational_logs'), orderBy('timestamp', 'desc'), limit(20));
     const unsubsLogs = onSnapshot(
-      logsQuery,
+      collection(db, 'operational_logs'),
       (snapshot) => {
         const data: OperationalLog[] = snapshot.docs.map((docSnap) => ({
           id: docSnap.id,
           ...docSnap.data()
         })) as OperationalLog[];
-        setLogs(data);
+        data.sort((a, b) => getMillis(b.timestamp) - getMillis(a.timestamp));
+        setLogs(data.slice(0, 30));
       },
       (error) => {
         console.error('Firestore Logs Sync Error:', error);
